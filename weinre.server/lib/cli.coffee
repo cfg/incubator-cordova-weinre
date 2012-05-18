@@ -32,6 +32,7 @@ optionDefaults =
     verbose:      false
     debug:        false
     readTimeout:  5
+    optionsFile:    0
 
 #-------------------------------------------------------------------------------
 exports.run = ->
@@ -44,6 +45,7 @@ exports.run = ->
         readTimeout:  Number
         deathTimeout: Number
         help:         Boolean
+        optionsFile:  String
         
     shortHands = 
         '?':  ['--help']
@@ -63,7 +65,7 @@ exports.run = ->
     #----
     
     delete parsedOpts.argv
-    opts = _.extend {}, optionDefaults, getDotWeinreServerProperties(), parsedOpts
+    opts = _.extend {}, optionDefaults, getDotWeinreServerProperties(parsedOpts.optionsFile), parsedOpts
 
     if !opts.deathTimeout?
         opts.deathTimeout = 3 * opts.readTimeout
@@ -91,6 +93,7 @@ options:
     --debug        print even more diagnostics           default: #{optionDefaults.debug}
     --readTimeout  seconds to wait for a client message  default: #{optionDefaults.readTimeout}
     --deathTimeout seconds to wait to kill client        default: 3*readTimeout
+    --optionsFile  optional file to load options from    default: #{optionDefaults.optionsFile}
     
 --boundHost can be an ip address, hostname, or -all-, where -all-
 means binding to all ip address on the current machine'
@@ -100,10 +103,10 @@ for more info see: http://incubator.apache.org/callback/
     process.exit()
 
 #-------------------------------------------------------------------------------
-getDotWeinreServerProperties = () ->
+getDotWeinreServerProperties = (fileName) ->
     properties = {}
-    
-    fileName = replaceTilde '~/.weinre/server.properties'
+    if !fileName?
+        fileName = replaceTilde '~/.weinre/server.properties'
     return properties if !path.existsSync(fileName)
     
     contents = fs.readFileSync(fileName, 'utf8')
